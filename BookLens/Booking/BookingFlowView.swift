@@ -42,7 +42,12 @@ struct BookingFlowView: View {
 
     @Binding var selectedTab: Int
     @State private var path = NavigationPath()
+    #if os(iOS)
+    // "Add to Calendar" is iOS-only: it's built on `EKEventEditViewController` (EventKitUI),
+    // which doesn't exist on macOS. See AddToCalendarView.swift for why this isn't ported to
+    // macOS's `EKEventStore` permission-based API for this example app.
     @State private var pendingCalendarAdd: (title: String, date: Date, durationMinutes: Int)?
+    #endif
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -55,6 +60,7 @@ struct BookingFlowView: View {
             ))
             .navigationDestination(for: BookingRoute.self, destination: routeDestination)
         }
+        #if os(iOS)
         .sheet(item: Binding(
             get: { pendingCalendarAdd.map(CalendarAddItem.init) },
             set: { if $0 == nil { pendingCalendarAdd = nil } }
@@ -66,6 +72,7 @@ struct BookingFlowView: View {
                 onFinish: { pendingCalendarAdd = nil }
             )
         }
+        #endif
     }
 
     @ViewBuilder
@@ -85,7 +92,9 @@ struct BookingFlowView: View {
                 timeSlot: slot,
                 onDone: {
                     modelContext.insert(Appointment(date: appointmentDate, service: service))
+                    #if os(iOS)
                     pendingCalendarAdd = (title: service.name, date: appointmentDate, durationMinutes: service.durationMinutes)
+                    #endif
                     path = NavigationPath()
                     selectedTab = 1
                 }

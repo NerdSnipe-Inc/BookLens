@@ -1,4 +1,13 @@
 import SwiftUI
+
+// `EKEventEditViewController` (EventKitUI) is iOS/iPadOS-only UIKit — it has no macOS
+// counterpart. On macOS, adding an event without a permission prompt isn't possible the same
+// way: there's no "present system UI, zero access" tier, only `EKEventStore.requestFullAccessToEvents`
+// plus a real calendar-access grant. Rather than build out full macOS calendar permission
+// handling for an example app, BookLens deliberately omits the "Add to Calendar" affordance on
+// macOS (see BookingFlowView and the README's Requirements/Screenshots sections) and this file
+// compiles only on iOS.
+#if os(iOS)
 import EventKit
 import EventKitUI
 
@@ -44,3 +53,4 @@ struct AddToCalendarView: UIViewControllerRepresentable {
         }
     }
 }
+#endif

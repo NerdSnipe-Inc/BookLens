@@ -1,13 +1,14 @@
 # BookLens
 
-[![Platform](https://img.shields.io/badge/platform-iOS%2018%2B-blue)](https://github.com/NerdSnipe-Inc/BookLens)
+[![Platform](https://img.shields.io/badge/platform-iOS%2018%2B%20%7C%20macOS%2015%2B-blue)](https://github.com/NerdSnipe-Inc/BookLens)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange)](https://github.com/NerdSnipe-Inc/BookLens)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Built with DesignFoundation](https://img.shields.io/badge/built%20with-DesignFoundation-8A2BE2)](https://github.com/NerdSnipe-Inc/design-foundation)
 
 **BookLens** is an open-source [SwiftUI appointment booking app](https://github.com/NerdSnipe-Inc/BookLens)
-for iOS — a full-source, production-quality example of a service-business scheduler, built from
-real, reusable components instead of throwaway demo code. It's a companion example to
+for **iOS and macOS** — a full-source, production-quality example of a service-business
+scheduler, [universal across iPhone, iPad, and Mac](https://github.com/NerdSnipe-Inc/BookLens),
+built from real, reusable components instead of throwaway demo code. It's a companion example to
 [AICompleteChat](https://github.com/NerdSnipe-Inc/AICompleteChat) and
 [BudgetLens](https://github.com/NerdSnipe-Inc/BudgetLens), applying the same
 [DesignFoundation](https://github.com/NerdSnipe-Inc/design-foundation) /
@@ -17,11 +18,11 @@ scheduling use case.
 
 Every screen in the booking flow — service selection, time-slot scheduling, confirmation, and
 "My Bookings" — comes from [DesignFoundation Pro's `Booking` UI kit](https://github.com/NerdSnipe-Inc/DesignFoundationPro),
-wired to real SwiftData persistence. Confirming a booking offers to add it straight to the
+wired to real SwiftData persistence. On iOS, confirming a booking offers to add it straight to the
 user's Calendar via [EventKitUI](https://github.com/NerdSnipe-Inc/BookLens) — Apple's
 zero-permission, zero-prompt way to add a single event — and the "AI Assistant" tab uses
 on-device [Foundation Models](https://github.com/NerdSnipe-Inc/BookLens) to explain, in plain
-language, why a particular open slot is being suggested.
+language, why a particular open slot is being suggested, on both platforms.
 
 Looking for a real-world **[SwiftUI booking app template](https://github.com/NerdSnipe-Inc/BookLens)**,
 a working **[EventKit calendar integration example](https://github.com/NerdSnipe-Inc/BookLens)**,
@@ -39,11 +40,13 @@ on iOS 26? This is a full app, not a snippet.
   verticals) that BookLens's booking flow is assembled from wholesale.
 - **Apple Foundation Models** — on-device [Apple Intelligence](https://github.com/NerdSnipe-Inc/BookLens)
   for the AI Assistant tab, via `LanguageModelSession` and `@Generable`.
-- **EventKitUI** — `EKEventEditViewController`, Apple's zero-permission way to add a single
-  event to Calendar without ever requesting broad calendar access.
+- **EventKitUI** (iOS only) — `EKEventEditViewController`, Apple's zero-permission way to add a
+  single event to Calendar without ever requesting broad calendar access.
 - **SwiftData** — local persistence for services and appointments.
 
 ## Screenshots
+
+### iPhone
 
 | Book | Schedule | Confirmed |
 |---|---|---|
@@ -53,6 +56,21 @@ on iOS 26? This is a full app, not a snippet.
 |---|---|---|
 | ![Calendar and upcoming bookings](images/my-bookings.png) | ![Manage services](images/services.png) | ![On-device scheduling suggestion](images/ai-assistant.png) |
 
+### Mac
+
+The same SwiftUI codebase, unmodified aside from one platform gate, running natively on macOS —
+DesignFoundation's cross-platform theming handles the desktop layout automatically. The one
+deliberate platform difference: "Add to Calendar" is iOS-only (see Architecture below), so the
+Mac confirmation step simply skips straight to My Bookings.
+
+| Book | My Bookings |
+|---|---|
+| ![macOS booking screen](images/mac-book.png) | ![macOS bookings calendar](images/mac-my-bookings.png) |
+
+| Services | AI Assistant |
+|---|---|
+| ![macOS services list](images/mac-services.png) | ![macOS on-device scheduling suggestion](images/mac-assistant.png) |
+
 ## What it does
 
 - **A booking flow built from a real design system** — `DFBookingServiceSelectionScreen` →
@@ -60,22 +78,23 @@ on iOS 26? This is a full app, not a snippet.
   and appointments instead of the vertical's in-memory preview data.
 - **A "My Bookings" calendar** — `DFCalendarView` with a dot marker on any day that has an
   appointment, above the real bookings list.
-- **Add to Calendar with zero permission prompts** — confirming a booking presents
+- **Add to Calendar with zero permission prompts, on iOS** — confirming a booking presents
   `EKEventEditViewController` (EventKitUI) directly; no `NSCalendarsUsageDescription` prompt,
-  no calendar access requested at all, because the app never reads the user's calendar.
+  no calendar access requested at all, because the app never reads the user's calendar. This
+  step is iOS-only — see Requirements and Architecture for why it's not ported to macOS.
 - **An on-device AI scheduling assistant** — the *actual* next open slot is always computed
   deterministically (`SlotFinder`, unit tested); Foundation Models is only asked to narrate
   *why* that slot makes sense, so the assistant can never suggest a time that doesn't really
   exist in the schedule. Gracefully degrades to just the computed slot (no write-up) on devices
-  or OS versions without Apple Intelligence.
+  or OS versions without Apple Intelligence. Works identically on iOS and macOS.
 - **Service management** built from DesignFoundation's core components (`DFList`, `DFEntityRow`,
   `DFTextField`, `DFEmptyState`).
 
 ## Requirements
 
-- iOS 18+ (the AI Assistant tab additionally requires iOS 26+ with Apple Intelligence enabled
-  to generate the write-up; the deterministic next-open-slot logic and the rest of the app work
-  fully on iOS 18)
+- iOS 18+ or macOS 15+ (the AI Assistant tab additionally requires iOS 26+ / macOS 26+ with
+  Apple Intelligence enabled to generate the write-up; the deterministic next-open-slot logic
+  and the rest of the app work fully on the iOS 18 / macOS 15 baseline)
 - Xcode 26+
 - [xcodegen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`) — this repo has no
   committed `.xcodeproj`; regenerate it from `project.yml`
@@ -95,6 +114,13 @@ on iOS 26? This is a full app, not a snippet.
   DesignFoundationPro's access list. [Grab a
   license](https://github.com/NerdSnipe-Inc/DesignFoundationPro) to fix it.
 
+**A macOS calendar-integration note:** `EKEventEditViewController` (EventKitUI) — the
+zero-permission "present system UI, add one event" API this app relies on for iOS — is
+UIKit-only and doesn't exist on macOS. Rather than build out full macOS calendar permission
+handling (`EKEventStore.requestFullAccessToEvents` plus real access UI) for an example app,
+BookLens deliberately omits the "Add to Calendar" step on macOS: confirming a booking there
+goes straight to My Bookings. See Architecture below for exactly how this is gated.
+
 [DesignFoundation](https://github.com/NerdSnipe-Inc/design-foundation) (the free SwiftUI
 design-system core) is public and resolves automatically via Swift Package Manager.
 
@@ -107,9 +133,9 @@ xcodegen generate
 open BookLens.xcodeproj
 ```
 
-Build and run the `BookLens` scheme on a simulator or device. The app seeds a handful of
-services and appointments on first launch so the flow and the assistant have real data
-immediately.
+Build and run the `BookLens` scheme (iOS, on a simulator or device) or the `BookLensMac` scheme
+(native macOS app). The app seeds a handful of services and appointments on first launch so the
+flow and the assistant have real data immediately, on either platform.
 
 ## Architecture
 
@@ -125,12 +151,13 @@ BookLens/
                                 FoundationModels dependency — unit tested directly)
   Booking/
     BookingFlowView.swift    — wires the Pro Booking vertical's screens to SwiftData + calendar add
-    AddToCalendarView.swift  — EKEventEditViewController wrapper (EventKitUI, zero permissions)
+    AddToCalendarView.swift  — EKEventEditViewController wrapper (EventKitUI, zero permissions),
+                                compiled only on iOS via `#if os(iOS)`
   MyBookings/
     MyBookingsView.swift     — DFCalendarView + DFMyBookingsScreen
   Services/                  — service management (DFList/DFEntityRow + add-service sheet)
   Assistant/
-    SchedulingAssistantEngine.swift — LanguageModelSession + @Generable SchedulingRationale, iOS 26+
+    SchedulingAssistantEngine.swift — LanguageModelSession + @Generable SchedulingRationale, iOS 26+/macOS 26+
     SchedulingAssistantView.swift   — loading skeleton, suggestion card, unavailable fallback
 ```
 
@@ -139,12 +166,22 @@ The booking flow reuses DesignFoundationPro's `Booking` vertical screens directl
 EventKitUI add-to-calendar step needs seams that convenience view doesn't expose. See
 DesignFoundationPro's own docs for how the vertical is put together.
 
+`project.yml` defines two application targets — `BookLens` (iOS) and `BookLensMac` (macOS) —
+that both build from the same `BookLens/` source folder. The only platform-conditional code is
+in `AddToCalendarView.swift` and `BookingFlowView.swift`, both gated with `#if os(iOS)`: the
+entire `EKEventEditViewController` wrapper compiles out on macOS (it's UIKit-only), and
+`BookingFlowView`'s confirmation step simply skips presenting it there, going straight to My
+Bookings. Everything else — the design system theming, the Booking vertical screens, SwiftData,
+and the Foundation Models assistant — is unmodified across platforms.
+
 ## Related Projects
 
 - DesignFoundation — the [free SwiftUI design system](https://github.com/NerdSnipe-Inc/design-foundation) this app (and its UI) is built on.
 - DesignFoundation Pro — the [premium vertical UI kits for Swift](https://github.com/NerdSnipe-Inc/DesignFoundationPro) (Booking, Analytics, AI Chat, CRM, E-commerce, and more) BookLens's booking flow uses.
 - AICompleteChat — the sibling full-source example app: an [on-device AI chat client example](https://github.com/NerdSnipe-Inc/AICompleteChat) built the same way.
 - BudgetLens — the sibling full-source example app: a [SwiftUI budget tracker with on-device AI insights](https://github.com/NerdSnipe-Inc/BudgetLens) built the same way.
+- ScanLens — a sibling full-source example app: a [SwiftUI document scanner example](https://github.com/NerdSnipe-Inc/ScanLens) built the same way.
+- ClientLens — a sibling full-source example app: a [SwiftUI CRM example](https://github.com/NerdSnipe-Inc/ClientLens) built the same way.
 
 ## License
 
@@ -153,7 +190,8 @@ is licensed separately (see its own repo).
 
 ---
 
-**Keywords:** SwiftUI booking app, appointment scheduler iOS, EventKit calendar integration
-example, EventKitUI example, SwiftData scheduling app, on-device AI scheduling assistant,
-Apple Intelligence example, Foundation Models Swift example, LanguageModelSession @Generable,
-SwiftUI design system, SwiftUI booking UI kit, open source iOS app example.
+**Keywords:** SwiftUI booking app, appointment scheduler iOS and macOS, cross-platform SwiftUI
+app iOS and macOS, EventKit calendar integration example, EventKitUI example, SwiftData
+scheduling app, on-device AI scheduling assistant, Apple Intelligence example, Foundation Models
+Swift example, LanguageModelSession @Generable, SwiftUI design system, SwiftUI booking UI kit,
+universal SwiftUI app example, open source iOS and macOS app example.
